@@ -1,0 +1,12 @@
+{
+    "name": "hgsgtk/php-cdp",
+    "description": "Chrome DevTools Protocol binding for PHP",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Hgsgtk\\PhpCdp\\": "src/"
+        }
+    },
+    "require": {}
+}
