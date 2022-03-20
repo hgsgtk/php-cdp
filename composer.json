@@ -5,8 +5,15 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Hgsgtk\\PhpCdp\\": "src/"
+            "PhpCdp\\": "src/"
         }
     },
-    "require": {}
+    "autoload-dev": {
+        "psr-4": {
+            "Test\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    }
 }
