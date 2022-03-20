@@ -1,8 +1,19 @@
 {
     "name": "hgsgtk/php-cdp",
     "description": "Chrome DevTools Protocol binding for PHP",
+    "keywords": [
+        "php",
+        "cdp",
+        "Chrome Devtools Protocol"
+    ],
     "type": "library",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Kazuki Higashiguchi",
+            "email": "hgsgtk@gmail.com"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "PhpCdp\\": "src/"
