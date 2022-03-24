@@ -8,11 +8,8 @@ use \GuzzleHttp\ClientInterface;
 
 final class Tab
 {
-    /**
-     * 
-     */
     public function __construct(
-        private string $id,
+        public string $id,
         private string $host,
         private string $port,
         private ClientInterface $httpClient,
