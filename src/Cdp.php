@@ -20,6 +20,9 @@ final class Cdp
         $this->httpClient = $httpClient ?? new Client();
     }
 
+    /**
+     * Open a new tab.
+     */
     public function open(?string $targetUrl = null): Tab 
     {
         $url = "http://{$this->host}:{$this->port}/json/new";
@@ -39,5 +42,14 @@ final class Cdp
             $this->port,
             $this->httpClient,
         );
+    }
+
+    /**
+     * Brings a page into the foreground
+     */
+    public function activate(Tab $tab) {
+        $response = $this->httpClient->request(
+            'GET', "http://{$this->host}:{$this->port}/json/activate/{$tab->id}");
+        // Fixme: error handling
     }
 }
