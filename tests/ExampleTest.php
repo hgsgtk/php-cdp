@@ -6,10 +6,13 @@ use PhpCdp\Cdp;
 
 final class ExampleTest extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * @doesNotPerformAssertions
+     */
     public function testGotoPage(): void
     {
         $client = new Cdp('127.0.0.1', '9222');
-        $tab = $client->tab();
-        $this->assertTrue(true);
+        $tab = $client->open('https://autify.com');
+        $tab->close();
     }
 }
