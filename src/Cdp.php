@@ -35,9 +35,13 @@ final class Cdp
             // Fixme: error handling
         }
 
-        $tabId = $body['id']; // Fixme: error handling
+        // Fixme: error handling
+        $tabId = $body['id']; 
+        $debuggerUrl = $body['webSocketDebuggerUrl'];
+
         return new Tab(
             $tabId,
+            $debuggerUrl,
             $this->host,
             $this->port,
             $this->httpClient,

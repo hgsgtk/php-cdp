@@ -10,6 +10,7 @@ final class Tab
 {
     public function __construct(
         public string $id,
+        public string $debuggerUrl,
         private string $host,
         private string $port,
         private ClientInterface $httpClient,

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use PhpCdp\Cdp;
+use PhpCdp\DevToolsClient;
 
 final class End2EndTest extends \PHPUnit\Framework\TestCase
 {
@@ -19,7 +20,7 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-        /**
+    /**
      * @doesNotPerformAssertions
      */
     public function testSwitchActiveTag(): void
@@ -37,6 +38,17 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
             $exampleTab->close();
             $blankTab->close();
         }
+    }
 
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testDevToolsDebugger(): void
+    {
+        $cdp = new Cdp('127.0.0.1', '9222');
+        $tab = $cdp->open('https://autify.com');
+
+        $devToolsClient = new DevToolsClient($tab->debuggerUrl);
+        $devToolsClient->ping();
     }
 }
