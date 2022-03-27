@@ -40,16 +40,27 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    /**
-     * @doesNotPerformAssertions
-     */
-    public function testDevToolsDebugger(): void
+    public function testDevTools_setDiscoverTargets(): void
     {
-        $cdp = new Cdp('127.0.0.1', '9222');
-        $tab = $cdp->open('https://autify.com');
-
-        $devToolsClient = new DevToolsClient($tab->debuggerUrl);
-        $devToolsClient->ping();
-        $devToolsClient->command();
+        try {
+            $cdp = new Cdp('127.0.0.1', '9222');
+            $tab = $cdp->open('https://autify.com');
+    
+            $devToolsClient = new DevToolsClient($tab->debuggerUrl);
+            $devToolsClient->ping();
+    
+            $cmd = new \stdClass();
+            $cmd->id = 1;
+            $cmd->method = 'Target.setDiscoverTargets'; // method
+            $params = new \stdClass();
+            $params->discover = true;
+            $cmd->params = $params;
+            
+            $actual = $devToolsClient->command($cmd);
+            $expectedMethod = 'Target.targetCreated';
+            $this->assertSame($expectedMethod, $actual['method']);    
+        } finally {
+            $tab->close();
+        }
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpCdp;
 
+use stdClass;
 use \WebSocket\Client;
 
 final class DevToolsClient
@@ -27,24 +28,21 @@ final class DevToolsClient
     /**
      * Send commands
      */
-    public function command()
+    public function command(stdClass $command): array
     {
-        $cmd = new \stdClass();
-        $cmd->id = 1; // message id?
-        $cmd->method = 'Target.setDiscoverTargets'; // method
-        $params = new \stdClass();
-        $params->discover = true;
-        $cmd->params = $params;
-        $json = json_encode($cmd);
+        $json = json_encode($command);
         if (!$json) {
             // Fixme: proper exception class
             throw new \RuntimeException("cannot encode JSON");
         }
         
-        var_dump($json);
-
         $this->client->send($json);
 
-        var_dump($this->client->receive());
+        $recv = $this->client->receive();
+        $decoded = json_decode($recv, true);
+        if (!$decoded) {
+            throw new \RuntimeException("cannot decode a received message");
+        }
+        return $decoded;
     }
 }
