@@ -96,7 +96,16 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
             
             $actual = $devTools->command($cmd);
             $this->assertSame(2, $actual['id']);
+
+            // https://vanilla.aslushnikov.com/?Page.loadEventFired
+            $cmd = [
+                'id' => 3,
+                'method' => 'Page.loadEventFired',
+                'params' => new stdClass,
+            ];
+            $actual = $devTools->command($cmd);
             var_dump($actual);
+
 
         } finally {
             sleep(3);
