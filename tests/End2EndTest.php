@@ -123,4 +123,73 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
             $tab->close();
         }
     }
+
+    /**
+     * This test case emulates the counting image flow explained at the following blog.
+     * @link https://medium.com/swlh/chrome-dev-tools-protocol-2d0ef2baf4bf
+     */
+    public function testDevTools_countAllMimeType(): void
+    {
+        try {
+            $cdp = new Cdp('127.0.0.1', '9222');
+            $tab = $cdp->open();
+
+            $devTools = new DevToolsClient($tab->debuggerUrl);
+
+            // https://vanilla.aslushnikov.com/?Network.enable
+            $cmd = [
+                'id' => 1,
+                'method' => 'Network.enable',
+                'params' => new stdClass, // all optionals
+            ];
+            $actual = $devTools->command($cmd);
+            $this->assertSame(1, $actual['id']);
+
+            $actualResponse = new class {
+                public array $responses = [];
+
+                public function listener($params) {
+                    $response = $params['response'];
+                    $this->responses[] = $response;
+                }
+            };
+            // https://vanilla.aslushnikov.com/?Network.responseReceived
+            $devTools->addListener('Network.responseReceived', $actualResponse->listener(...));
+            
+            // https://vanilla.aslushnikov.com/?Page.enable
+            $cmd = [
+                'id' => 1,
+                'method' => 'Page.enable',
+            ];
+            $actual = $devTools->command($cmd);
+            $this->assertSame(1, $actual['id']);
+
+            // https://vanilla.aslushnikov.com/?Page.navigate
+            $cmd = [
+                'id' => 2,
+                'method' => 'Page.navigate',
+                'params' => [
+                    'url' => 'https://autify.com',
+                ],
+            ];
+            
+            $actual = $devTools->command($cmd);
+            $this->assertSame(2, $actual['id']);
+
+            $devTools->receiveUntil(2);
+
+            $groupByMimeTypes = [];
+            foreach ($actualResponse->responses as $response) {
+                $mimeType = $response['mimeType'];
+                $groupByMimeTypes[$mimeType][] = $response;
+            }
+            
+            foreach ($groupByMimeTypes as $mimeType => $responses) {
+                $count = count($responses);
+                echo "mimeType: {$mimeType} count {$count}\n";
+            }
+        } finally {
+            $tab->close();
+        }
+    }
 }
