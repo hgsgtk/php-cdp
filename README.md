@@ -29,3 +29,10 @@ $ /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
 
  DevTools listening on ws://127.0.0.1:9222/devtools/browser/3d57cf62-84ae-4f71-bfa4-3c38b58dcece
 ```
+
+## Development
+
+### Cache the protocol definition
+
+- Install chromedp/cdproto-gen
+
