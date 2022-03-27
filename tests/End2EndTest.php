@@ -192,4 +192,47 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
             $tab->close();
         }
     }
+
+    public function testDevTools_captureScreenshot(): void
+    {
+        try {
+            $cdp = new Cdp('127.0.0.1', '9222');
+            $tab = $cdp->open('https://autify.com');
+
+            $devTools = new DevToolsClient($tab->debuggerUrl);
+            
+            // https://vanilla.aslushnikov.com/?Page.enable
+            $cmd = [
+                'id' => 1,
+                'method' => 'Page.enable',
+            ];
+            $actual = $devTools->command($cmd);
+            $this->assertSame(1, $actual['id']);
+
+            /**
+             * Page.domContentEventFired
+             * @link https://vanilla.aslushnikov.com/?Page.domContentEventFired
+             *   ["timestamp"]=> float(67085.527266)
+             */
+            $eventResponse = $devTools->waitFor('Page.domContentEventFired', 3);
+            var_dump($eventResponse);
+
+            // https://vanilla.aslushnikov.com/?Page.captureScreenshot
+            $cmd = [
+                'id' => 2,
+                'method' => 'Page.captureScreenshot',
+            ];
+            $actual = $devTools->command($cmd);
+            $this->assertSame(2, $actual['id']);
+            // Base64-encoded image data
+            $decoded = base64_decode($actual['result']['data'], true);
+            if (!$decoded) {
+                $this->fail('cannot decode a base64-encoded screenshot string');
+            }
+
+            file_put_contents(__DIR__ . '/../tmp/autify_com_screenshot.png', $decoded);
+        } finally {
+            $tab->close();
+        }
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpCdp;
 
 use InvalidArgumentException;
+use RuntimeException;
 use stdClass;
 use \WebSocket\Client;
 
@@ -116,4 +117,26 @@ final class DevToolsClient
             }
         }
     }
+
+    public function waitFor(string $method, int $timeoutSecond): array {
+        $start = hrtime(true);
+
+        while ((hrtime(true) - $start) / 1000000000 <= $timeoutSecond) {
+            $recv = $this->client->receive();
+            $decoded = json_decode($recv, true);
+            if (!$decoded) {
+                throw new \RuntimeException("cannot decode a received message");
+            }
+
+            if (array_key_exists('method', $decoded)) {
+                $recvMethod = $decoded['method'];
+                if ($method == $recvMethod) {
+                    // Event has the `params` field.
+                    return $decoded['params'];
+                }
+            }
+        }
+
+        throw new RuntimeException('timeout');
+    } 
 }
