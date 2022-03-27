@@ -69,6 +69,10 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
         }
     }
 
+    /**
+     * This test case emulates the network tracing flow explained at the following blog.
+     * @link https://medium.com/swlh/chrome-dev-tools-protocol-2d0ef2baf4bf
+     */
     public function testDevTools_navigatePage(): void
     {
         try {
@@ -76,6 +80,23 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
             $tab = $cdp->open();
 
             $devTools = new DevToolsClient($tab->debuggerUrl);
+
+            // https://vanilla.aslushnikov.com/?Network.enable
+            $cmd = [
+                'id' => 1,
+                'method' => 'Network.enable',
+                'params' => new stdClass, // all optionals
+            ];
+            $actual = $devTools->command($cmd);
+            $this->assertSame(1, $actual['id']);
+
+            // https://vanilla.aslushnikov.com/?Network.requestWillBeSent
+            $devTools->addListener('Network.requestWillBeSent', function($params) {
+                $request = $params['request'];
+                $url = $request['url'];
+                $method = $request['method'];
+                echo "browser sent: {$method} {$url}\n";
+            });
             
             // https://vanilla.aslushnikov.com/?Page.enable
             $cmd = [
@@ -97,18 +118,8 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
             $actual = $devTools->command($cmd);
             $this->assertSame(2, $actual['id']);
 
-            // https://vanilla.aslushnikov.com/?Page.loadEventFired
-            $cmd = [
-                'id' => 3,
-                'method' => 'Page.loadEventFired',
-                'params' => new stdClass,
-            ];
-            $actual = $devTools->command($cmd);
-            var_dump($actual);
-
-
+            $devTools->receiveUntil(2);
         } finally {
-            sleep(3);
             $tab->close();
         }
     }
