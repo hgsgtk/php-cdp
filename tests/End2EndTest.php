@@ -50,5 +50,6 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
 
         $devToolsClient = new DevToolsClient($tab->debuggerUrl);
         $devToolsClient->ping();
+        $devToolsClient->command();
     }
 }
