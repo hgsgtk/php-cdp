@@ -28,13 +28,15 @@ final class DevToolsClient
     /**
      * Send commands
      */
-    public function command(stdClass $command): array
+    public function command(array $command): array
     {
         $json = json_encode($command);
         if (!$json) {
             // Fixme: proper exception class
             throw new \RuntimeException("cannot encode JSON");
         }
+
+        var_dump('send: ' . $json);
         
         $this->client->send($json);
 

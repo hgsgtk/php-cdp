@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use PhpCdp\Cdp;
 use PhpCdp\DevToolsClient;
+use Ramsey\Uuid\Uuid;
 
 final class End2EndTest extends \PHPUnit\Framework\TestCase
 {
@@ -46,20 +47,59 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
             $cdp = new Cdp('127.0.0.1', '9222');
             $tab = $cdp->open('https://autify.com');
     
-            $devToolsClient = new DevToolsClient($tab->debuggerUrl);
-            $devToolsClient->ping();
+            $devTools = new DevToolsClient($tab->debuggerUrl);
+            $devTools->ping();
     
-            $cmd = new \stdClass();
-            $cmd->id = 1;
-            $cmd->method = 'Target.setDiscoverTargets'; // method
-            $params = new \stdClass();
-            $params->discover = true;
-            $cmd->params = $params;
-            
-            $actual = $devToolsClient->command($cmd);
+            // https://vanilla.aslushnikov.com/?Target.setDiscoverTargets
+            $cmd = [
+                'id' => 1,
+                'method' => 'Target.setDiscoverTargets',
+                'params' => [
+                    'discover' => true,
+                ],
+            ]; 
+            $actual = $devTools->command($cmd);
+
+            var_dump($actual);
+
             $expectedMethod = 'Target.targetCreated';
             $this->assertSame($expectedMethod, $actual['method']);    
         } finally {
+            $tab->close();
+        }
+    }
+
+    public function testDevTools_navigatePage(): void
+    {
+        try {
+            $cdp = new Cdp('127.0.0.1', '9222');
+            $tab = $cdp->open();
+
+            $devTools = new DevToolsClient($tab->debuggerUrl);
+            
+            // https://vanilla.aslushnikov.com/?Page.enable
+            $cmd = [
+                'id' => 1,
+                'method' => 'Page.enable',
+            ];
+            $actual = $devTools->command($cmd);
+            $this->assertSame(1, $actual['id']);
+
+            // https://vanilla.aslushnikov.com/?Page.navigate
+            $cmd = [
+                'id' => 2,
+                'method' => 'Page.navigate',
+                'params' => [
+                    'url' => 'https://autify.com',
+                ],
+            ];
+            
+            $actual = $devTools->command($cmd);
+            $this->assertSame(2, $actual['id']);
+            var_dump($actual);
+
+        } finally {
+            sleep(3);
             $tab->close();
         }
     }
