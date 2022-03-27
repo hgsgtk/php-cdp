@@ -172,7 +172,6 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
                     'url' => 'https://autify.com',
                 ],
             ];
-            
             $actual = $devTools->command($cmd);
             $this->assertSame(2, $actual['id']);
 
@@ -210,12 +209,10 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
             $this->assertSame(1, $actual['id']);
 
             /**
-             * Page.domContentEventFired
              * @link https://vanilla.aslushnikov.com/?Page.domContentEventFired
              *   ["timestamp"]=> float(67085.527266)
              */
             $eventResponse = $devTools->waitFor('Page.domContentEventFired', 3);
-            var_dump($eventResponse);
 
             // https://vanilla.aslushnikov.com/?Page.captureScreenshot
             $cmd = [
@@ -230,7 +227,62 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
                 $this->fail('cannot decode a base64-encoded screenshot string');
             }
 
-            file_put_contents(__DIR__ . '/../tmp/autify_com_screenshot.png', $decoded);
+            file_put_contents(__DIR__ . '/../tmp/autify_com_screenshot_non_LCP.png', $decoded);
+        } finally {
+            $tab->close();
+        }
+    }
+
+    public function testDevTools_captureScreenshot_LCP(): void
+    {
+        try {
+            $cdp = new Cdp('127.0.0.1', '9222');
+            $tab = $cdp->open();
+
+            $devTools = new DevToolsClient($tab->debuggerUrl);
+            
+            // https://vanilla.aslushnikov.com/?PerformanceTimeline.enable
+            $cmd = [
+                'id' => 1,
+                'method' => 'PerformanceTimeline.enable',
+                'params' => [
+                    // https://w3c.github.io/timing-entrytypes-registry/#registry
+                    'eventTypes' => ['largest-contentful-paint'],
+                ],
+            ];
+            $actual = $devTools->command($cmd);
+            $this->assertSame(1, $actual['id']);
+
+            // Go to a heavy page.
+            $cmd = [
+                'id' => 4,
+                'method' => 'Page.navigate',
+                'params' => [
+                    'url' => 'https://autify.com',
+                ],
+            ];
+            $actual = $devTools->command($cmd);
+            $this->assertSame(4, $actual['id']);
+
+            /**
+             * @link https://vanilla.aslushnikov.com/?PerformanceTimeline.timelineEventAdded
+             */
+            $devTools->waitFor('PerformanceTimeline.timelineEventAdded', 3);
+
+            // https://vanilla.aslushnikov.com/?Page.captureScreenshot
+            $cmd = [
+                'id' => 5,
+                'method' => 'Page.captureScreenshot',
+            ];
+            $actual = $devTools->command($cmd);
+            $this->assertSame(5, $actual['id']);
+            // Base64-encoded image data
+            $decoded = base64_decode($actual['result']['data'], true);
+            if (!$decoded) {
+                $this->fail('cannot decode a base64-encoded screenshot string');
+            }
+
+            file_put_contents(__DIR__ . '/../tmp/autify_com_screenshot_after_LCP.png', $decoded);
         } finally {
             $tab->close();
         }
