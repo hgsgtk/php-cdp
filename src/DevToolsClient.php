@@ -139,4 +139,44 @@ final class DevToolsClient
 
         throw new RuntimeException('timeout');
     } 
+
+    /**
+     * @fixme It should be generated domain codes from protocol JSON file.
+     */
+    public function networkEnable(): void
+    {
+        $id = rand();
+        $cmd = [
+            'id' => $id,
+            'method' => 'Network.enable',
+            'params' => new stdClass, // all optionals
+        ];
+        $recv = $this->command($cmd);
+        if ($id !== $recv['id']) {
+            throw new RuntimeException("invalid response received");
+        }
+
+        return;
+    }
+
+    /**
+     * @fixme It should be generated domain codes from protocol JSON file.
+     * @link https://vanilla.aslushnikov.com/?Page.navigate
+     */
+    public function pageNavigate(string $url): void
+    {
+        $id = rand();
+
+        $cmd = [
+            'id' => $id,
+            'method' => 'Page.navigate',
+            'params' => [
+                'url' => $url,
+            ],
+        ];
+        $recv = $this->command($cmd);
+        if ($id !== $recv['id']) {
+            throw new RuntimeException("invalid response received");
+        }
+    }
 }

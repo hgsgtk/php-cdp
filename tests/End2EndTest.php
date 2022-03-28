@@ -130,6 +130,25 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
      */
     public function testDevTools_countAllMimeType(): void
     {
+        $responseMimeTypes = new class {
+            public array $groupedBy = [];
+
+            public function groupBy(array $responses): void
+            {
+                foreach ($responses as $response) {
+                    $mimeType = $response['mimeType'];
+                    $this->groupedBy[$mimeType][] = $response;
+                }
+            }
+
+            public function echoEachCount(): void
+            {
+                foreach ($this->groupedBy as $mimeType => $responses) {
+                    $count = count($responses);
+                    echo "mimeType: {$mimeType} count {$count}\n";
+                }
+            }
+        };
         try {
             $cdp = new Cdp('127.0.0.1', '9222');
             $tab = $cdp->open();
@@ -137,13 +156,7 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
             $devTools = new DevToolsClient($tab->debuggerUrl);
 
             // https://vanilla.aslushnikov.com/?Network.enable
-            $cmd = [
-                'id' => 1,
-                'method' => 'Network.enable',
-                'params' => new stdClass, // all optionals
-            ];
-            $actual = $devTools->command($cmd);
-            $this->assertSame(1, $actual['id']);
+            $devTools->networkEnable();
 
             $actualResponse = new class {
                 public array $responses = [];
@@ -155,38 +168,15 @@ final class End2EndTest extends \PHPUnit\Framework\TestCase
             };
             // https://vanilla.aslushnikov.com/?Network.responseReceived
             $devTools->addListener('Network.responseReceived', $actualResponse->listener(...));
-            
-            // https://vanilla.aslushnikov.com/?Page.enable
-            $cmd = [
-                'id' => 1,
-                'method' => 'Page.enable',
-            ];
-            $actual = $devTools->command($cmd);
-            $this->assertSame(1, $actual['id']);
 
-            // https://vanilla.aslushnikov.com/?Page.navigate
-            $cmd = [
-                'id' => 2,
-                'method' => 'Page.navigate',
-                'params' => [
-                    'url' => 'https://autify.com',
-                ],
-            ];
-            $actual = $devTools->command($cmd);
-            $this->assertSame(2, $actual['id']);
+            $devTools->pageNavigate('https://autify.com/mobile');
 
             $devTools->receiveUntil(2);
 
-            $groupByMimeTypes = [];
-            foreach ($actualResponse->responses as $response) {
-                $mimeType = $response['mimeType'];
-                $groupByMimeTypes[$mimeType][] = $response;
-            }
-            
-            foreach ($groupByMimeTypes as $mimeType => $responses) {
-                $count = count($responses);
-                echo "mimeType: {$mimeType} count {$count}\n";
-            }
+            $responseMimeTypes->groupBy($actualResponse->responses);
+            $responseMimeTypes->echoEachCount();
+
+            $this->assertSame(1, count($responseMimeTypes->groupedBy['text/html']));
         } finally {
             $tab->close();
         }
